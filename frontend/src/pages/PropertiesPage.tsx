@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import { useProperties } from '../hooks/useProperties';
 import { PropertyList } from '../components/properties/PropertyList';
 import { PropertyForm } from '../components/properties/PropertyForm';
@@ -49,8 +51,10 @@ export default function PropertiesPage() {
   };
 
   return (
-    <main style={{ padding: '1rem', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
-      <h1>Propiedades</h1>
+    <Box component="main">
+      <Typography variant="h4" component="h1" gutterBottom>
+        Propiedades
+      </Typography>
 
       {error && <ErrorAlert message={error} />}
 
@@ -71,6 +75,6 @@ export default function PropertiesPage() {
           error={formError}
         />
       )}
-    </main>
+    </Box>
   );
 }

@@ -1,9 +1,24 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link as RouterLink } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Rating from '@mui/material/Rating';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
 import { useReviews } from '../hooks/useReviews';
 import { ReviewForm } from '../components/reviews/ReviewForm';
-import { ReviewList } from '../components/reviews/ReviewList';
 import { ErrorAlert } from '../components/common/ErrorAlert';
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-AR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
 export default function ReviewsPage() {
   const { id: propertyId } = useParams<{ id: string }>();
@@ -33,15 +48,30 @@ export default function ReviewsPage() {
   };
 
   return (
-    <main style={{ padding: '1rem', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
-      <Link to={`/properties/${propertyId}`}>← Volver a propiedad</Link>
-      <h1>Reseñas</h1>
+    <Box>
+      <Button
+        component={RouterLink}
+        to={`/properties/${propertyId}`}
+        startIcon={<ArrowBackIcon />}
+        sx={{ mb: 2 }}
+      >
+        Volver a propiedad
+      </Button>
+
+      <Typography variant="h4" component="h1" gutterBottom>
+        Reseñas
+      </Typography>
 
       {error && <ErrorAlert message={error} />}
 
-      <button onClick={() => setShowForm(!showForm)} style={{ marginBottom: '1rem' }}>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => setShowForm(!showForm)}
+        sx={{ mb: 2 }}
+      >
         {showForm ? 'Cancelar' : 'Nueva reseña'}
-      </button>
+      </Button>
 
       {showForm && (
         <ReviewForm
@@ -51,7 +81,35 @@ export default function ReviewsPage() {
         />
       )}
 
-      <ReviewList reviews={reviews} />
-    </main>
+      {reviews.length === 0 ? (
+        <Typography color="text.secondary" sx={{ py: 2 }}>
+          No hay reseñas para esta propiedad.
+        </Typography>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {reviews.map((r) => (
+            <Card key={r.id} variant="outlined">
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <Typography variant="h6" component="span">
+                    {r.guestName}
+                  </Typography>
+                  <Rating value={r.score} readOnly size="small" />
+                  <Typography variant="body2" color="text.secondary">
+                    ({r.score}/5)
+                  </Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary">
+                  {formatDate(r.createdAt)}
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1 }}>
+                  {r.comment}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
+    </Box>
   );
 }

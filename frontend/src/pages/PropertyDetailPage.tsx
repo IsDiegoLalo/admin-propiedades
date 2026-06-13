@@ -1,5 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import Rating from '@mui/material/Rating';
+import ImageList from '@mui/material/ImageList';
+import ImageListItem from '@mui/material/ImageListItem';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { getProperty, updateProperty, deleteProperty } from '../services/propertiesService';
 import { PropertyForm } from '../components/properties/PropertyForm';
 import { ErrorAlert } from '../components/common/ErrorAlert';
@@ -71,10 +83,17 @@ export default function PropertyDetailPage() {
 
   if (error) {
     return (
-      <main style={{ padding: '1rem', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
-        <Link to="/">← Volver</Link>
+      <Box>
+        <Button
+          component={RouterLink}
+          to="/"
+          startIcon={<ArrowBackIcon />}
+          sx={{ mb: 2 }}
+        >
+          Volver
+        </Button>
         <ErrorAlert message={error} />
-      </main>
+      </Box>
     );
   }
 
@@ -83,108 +102,155 @@ export default function PropertyDetailPage() {
   }
 
   return (
-    <main style={{ padding: '1rem', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
-      <Link to="/">← Volver</Link>
+    <Box>
+      <Button
+        component={RouterLink}
+        to="/"
+        startIcon={<ArrowBackIcon />}
+        sx={{ mb: 2 }}
+      >
+        Volver
+      </Button>
 
       {!editing ? (
-        <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
-            <h1 style={{ margin: 0 }}>{property.name}</h1>
-            <button onClick={startEditing}>Editar</button>
-            <button onClick={() => void handleDelete()} style={{ color: 'red' }}>
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+            <Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
+              {property.name}
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={startEditing}
+            >
+              Editar
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => void handleDelete()}
+            >
               Eliminar
-            </button>
-          </div>
+            </Button>
+          </Box>
 
-          <p>
+          <Divider sx={{ mb: 2 }} />
+
+          <Typography variant="body1" gutterBottom>
             <strong>Tipo:</strong> {property.type === 'house' ? 'Casa' : 'Departamento'}
-          </p>
-          <p>
+          </Typography>
+          <Typography variant="body1" gutterBottom>
             <strong>Dirección:</strong> {property.address}
-          </p>
-          <p>
+          </Typography>
+          <Typography variant="body1" gutterBottom>
             <strong>Precio:</strong> USD {property.pricePerDayUSD}/día
-          </p>
-          <p>
+          </Typography>
+          <Typography variant="body1" gutterBottom>
             <strong>Máx. huéspedes:</strong> {property.maxGuests}
-          </p>
-          <p>
+          </Typography>
+          <Typography variant="body1" gutterBottom>
             <strong>Penalidad de cancelación:</strong> {property.cancellationPenaltyPercent}%
-          </p>
+          </Typography>
+
           {property.starRating !== null && (
-            <p>
-              <strong>Calificación:</strong> ⭐ {property.starRating}
-            </p>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography variant="body1">
+                <strong>Calificación:</strong>
+              </Typography>
+              <Rating value={property.starRating} precision={0.5} readOnly size="small" />
+              <Typography variant="body2" color="text.secondary">
+                ({property.starRating})
+              </Typography>
+            </Box>
           )}
 
           {property.services.length > 0 && (
-            <section>
-              <h2>Servicios</h2>
-              <ul>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Servicios
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {property.services.map((s) => (
-                  <li key={s}>{s}</li>
+                  <Chip key={s} label={s} color="secondary" variant="outlined" />
                 ))}
-              </ul>
-            </section>
+              </Box>
+            </Box>
           )}
 
           {property.rooms.length > 0 && (
-            <section>
-              <h2>Habitaciones</h2>
-              <ul>
-                {property.rooms.map((r) => (
-                  <li key={r.id}>
-                    <strong>{r.name}</strong> — {r.type} · {r.beds} camas
-                    <br />
-                    {r.description}
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Habitaciones
+              </Typography>
+              {property.rooms.map((r) => (
+                <Paper key={r.id} variant="outlined" sx={{ p: 2, mb: 1 }}>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {r.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {r.type} · {r.beds} camas
+                  </Typography>
+                  <Typography variant="body2">{r.description}</Typography>
+                </Paper>
+              ))}
+            </Box>
           )}
 
           {property.photos.length > 0 && (
-            <section>
-              <h2>Fotos</h2>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Fotos
+              </Typography>
+              <ImageList cols={3} rowHeight={160} gap={8}>
                 {property.photos.map((ph) => (
-                  <img
-                    key={ph.photoId}
-                    src={ph.url}
-                    alt={ph.filename}
-                    style={{
-                      width: '150px',
-                      height: '100px',
-                      objectFit: 'cover',
-                      borderRadius: '4px',
-                    }}
-                  />
+                  <ImageListItem key={ph.photoId}>
+                    <img
+                      src={ph.url}
+                      alt={ph.filename}
+                      style={{ objectFit: 'cover', borderRadius: 8, height: '100%' }}
+                    />
+                  </ImageListItem>
                 ))}
-              </div>
-            </section>
+              </ImageList>
+            </Box>
           )}
 
           {Object.keys(property.extendedAttributes).length > 0 && (
-            <section>
-              <h2>Atributos extendidos</h2>
-              <pre
-                style={{
-                  background: '#f4f4f4',
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  overflowX: 'auto',
-                }}
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Atributos extendidos
+              </Typography>
+              <Paper
+                variant="outlined"
+                sx={{ p: 2, backgroundColor: '#f8f9fa', overflowX: 'auto' }}
               >
-                {JSON.stringify(property.extendedAttributes, null, 2)}
-              </pre>
-            </section>
+                <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                  {JSON.stringify(property.extendedAttributes, null, 2)}
+                </pre>
+              </Paper>
+            </Box>
           )}
 
-          <section style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
-            <Link to={`/properties/${id}/bookings`}>Ver reservas</Link>
-            <Link to={`/properties/${id}/reviews`}>Ver reseñas</Link>
-          </section>
-        </>
+          <Divider sx={{ my: 3 }} />
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              component={RouterLink}
+              to={`/properties/${id}/bookings`}
+            >
+              Ver reservas
+            </Button>
+            <Button
+              variant="outlined"
+              component={RouterLink}
+              to={`/properties/${id}/reviews`}
+            >
+              Ver reseñas
+            </Button>
+          </Box>
+        </Paper>
       ) : (
         <PropertyForm
           mode="edit"
@@ -203,6 +269,6 @@ export default function PropertyDetailPage() {
           error={formError}
         />
       )}
-    </main>
+    </Box>
   );
 }
