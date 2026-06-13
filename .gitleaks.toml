@@ -1,0 +1,28 @@
+# Configuración de Gitleaks para detección de secrets
+# Documentación: https://github.com/gitleaks/gitleaks
+
+title = "admin-propiedades gitleaks config"
+
+[allowlist]
+  description = "Archivos permitidos (no escanear)"
+  paths = [
+    '''node_modules/''',
+    '''\.env\.example$''',
+    '''package-lock\.json$''',
+    '''\.gitleaks\.toml$''',
+  ]
+
+# Reglas personalizadas adicionales al ruleset por defecto de gitleaks
+# (gitleaks ya incluye reglas para AWS keys, tokens genéricos, etc.)
+
+[[rules]]
+  id = "custom-postgres-password"
+  description = "PostgreSQL password en texto plano"
+  regex = '''POSTGRES_PASSWORD\s*=\s*(?!changeme)[^\s]+'''
+  tags = ["database", "password"]
+
+[[rules]]
+  id = "custom-mongo-uri-with-credentials"
+  description = "MongoDB URI con credenciales embebidas"
+  regex = '''mongodb://[^:]+:[^@]+@'''
+  tags = ["database", "credential"]

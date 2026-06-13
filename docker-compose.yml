@@ -1,0 +1,175 @@
+version: '3.9'
+
+services:
+  # ── Properties Service ─────────────────────────────────────────────
+  properties-service:
+    build:
+      context: ./services/properties
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      PORT: ${PROPERTIES_PORT:-3001}
+      POSTGRES_HOST: properties-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${PROPERTIES_POSTGRES_DB:-properties_db}
+      POSTGRES_USER: ${PROPERTIES_POSTGRES_USER:-properties_user}
+      POSTGRES_PASSWORD: ${PROPERTIES_POSTGRES_PASSWORD:-changeme_properties}
+      MONGO_URI: ${MONGO_URI:-mongodb://properties-mongo:27017/properties_docs}
+      REVIEWS_SERVICE_URL: ${REVIEWS_SERVICE_URL:-http://reviews-service:3003}
+      PHOTO_MAX_SIZE_BYTES: ${PHOTO_MAX_SIZE_BYTES:-10485760}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      properties-postgres:
+        condition: service_healthy
+      properties-mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3001/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  properties-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${PROPERTIES_POSTGRES_DB:-properties_db}
+      POSTGRES_USER: ${PROPERTIES_POSTGRES_USER:-properties_user}
+      POSTGRES_PASSWORD: ${PROPERTIES_POSTGRES_PASSWORD:-changeme_properties}
+    volumes:
+      - properties-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${PROPERTIES_POSTGRES_USER:-properties_user} -d ${PROPERTIES_POSTGRES_DB:-properties_db}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  properties-mongo:
+    image: mongo:7
+    volumes:
+      - properties-mongo-data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ── Reservations Service ───────────────────────────────────────────
+  reservations-service:
+    build:
+      context: ./services/reservations
+      dockerfile: Dockerfile
+    ports:
+      - '3002:3002'
+    environment:
+      PORT: ${RESERVATIONS_PORT:-3002}
+      POSTGRES_HOST: reservations-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${RESERVATIONS_POSTGRES_DB:-reservations_db}
+      POSTGRES_USER: ${RESERVATIONS_POSTGRES_USER:-reservations_user}
+      POSTGRES_PASSWORD: ${RESERVATIONS_POSTGRES_PASSWORD:-changeme_reservations}
+      PROPERTIES_SERVICE_URL: ${PROPERTIES_SERVICE_URL:-http://properties-service:3001}
+      PAYMENT_MOCK_FAILURE_RATE: ${PAYMENT_MOCK_FAILURE_RATE:-0}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      reservations-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3002/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  reservations-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${RESERVATIONS_POSTGRES_DB:-reservations_db}
+      POSTGRES_USER: ${RESERVATIONS_POSTGRES_USER:-reservations_user}
+      POSTGRES_PASSWORD: ${RESERVATIONS_POSTGRES_PASSWORD:-changeme_reservations}
+    volumes:
+      - reservations-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${RESERVATIONS_POSTGRES_USER:-reservations_user} -d ${RESERVATIONS_POSTGRES_DB:-reservations_db}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ── Reviews Service ────────────────────────────────────────────────
+  reviews-service:
+    build:
+      context: ./services/reviews
+      dockerfile: Dockerfile
+    ports:
+      - '3003:3003'
+    environment:
+      PORT: ${REVIEWS_PORT:-3003}
+      POSTGRES_HOST: reviews-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${REVIEWS_POSTGRES_DB:-reviews_db}
+      POSTGRES_USER: ${REVIEWS_POSTGRES_USER:-reviews_user}
+      POSTGRES_PASSWORD: ${REVIEWS_POSTGRES_PASSWORD:-changeme_reviews}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      reviews-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:3003/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  reviews-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${REVIEWS_POSTGRES_DB:-reviews_db}
+      POSTGRES_USER: ${REVIEWS_POSTGRES_USER:-reviews_user}
+      POSTGRES_PASSWORD: ${REVIEWS_POSTGRES_PASSWORD:-changeme_reviews}
+    volumes:
+      - reviews-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${REVIEWS_POSTGRES_USER:-reviews_user} -d ${REVIEWS_POSTGRES_DB:-reviews_db}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ── Frontend ────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_PROPERTIES_API_URL: ${VITE_PROPERTIES_API_URL:-http://localhost:3001}
+        VITE_RESERVATIONS_API_URL: ${VITE_RESERVATIONS_API_URL:-http://localhost:3002}
+        VITE_REVIEWS_API_URL: ${VITE_REVIEWS_API_URL:-http://localhost:3003}
+    ports:
+      - '5173:80'
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  properties-pg-data:
+  properties-mongo-data:
+  reservations-pg-data:
+  reviews-pg-data:
