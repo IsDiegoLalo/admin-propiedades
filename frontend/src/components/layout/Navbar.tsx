@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
@@ -16,6 +15,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import AddHomeIcon from '@mui/icons-material/AddHome';
+import logoSrc from '../../assets/images/logo.png';
 
 interface NavItem {
   label: string;
@@ -53,18 +53,21 @@ export function Navbar() {
             <MenuIcon />
           </IconButton>
 
-          <Typography
-            variant="h6"
-            component="div"
+          <Box
             sx={{
               flexGrow: 1,
               cursor: 'pointer',
-              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
             }}
             onClick={() => navigate('/')}
           >
-            Admin Propiedades
-          </Typography>
+            <img
+              src={logoSrc}
+              alt="Admin Propiedades"
+              style={{ height: 40 }}
+            />
+          </Box>
 
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
             {NAV_ITEMS.map((item) => (
@@ -93,12 +96,13 @@ export function Navbar() {
         aria-label="menú de navegación"
       >
         <Box sx={{ width: 260 }} role="navigation">
-          <Typography
-            variant="h6"
-            sx={{ p: 2, fontWeight: 700, color: 'primary.main' }}
-          >
-            Admin Propiedades
-          </Typography>
+          <Box sx={{ p: 2 }}>
+            <img
+              src={logoSrc}
+              alt="Admin Propiedades"
+              style={{ height: 36 }}
+            />
+          </Box>
           <List>
             {NAV_ITEMS.map((item) => (
               <ListItem key={item.label} disablePadding>
