@@ -1,55 +1,45 @@
----
-inclusion: always
-description: "Contexto del Jornada de IA para Gobierno: APIs oficiales, principios de desarrollo, stack recomendado y recursos"
----
+Definicion inicial de requerimientos
 
-**Jornada de IA para Gobierno — Contexto General del Proyecto**
+Quiero que construyas una aplicacion web full stack. El frontend debe estar hecho en React y el backend en NodeJS, ambos usando TypeScript. La aplicacion debe almacenar la informacion de distintas propiedades (casas o departamentos) disponibles para alquilar. El frontend debe mostrar la informacion de la propiedad:
 
-***Descripción***
+* cantidad de habitaciones 
 
-Este repositorio contiene los desafíos del Jornada de IA para Gobierno organizado en colaboración con la Dirección Nacional de Datos e Información Pública de Argentina. Los equipos participantes construirán productos de datos usando datasets públicos de datos.gob.ar y las APIs oficiales de la Dirección.
+* cantidad de personas que se pueden hospedar 
 
-***Objetivo general***
+* fotos de la propiedad
 
-Desarrollar aplicaciones útiles para la ciudadanía usando datos abiertos del Estado argentino, aprovechando las capacidades de Kiro como IDE con IA integrada para acelerar el desarrollo spec-first.
+* servicios disponibles en la propiedad -> wifi, estacionamiento, parrilla, aire acondicionado, cocina equipada
 
-***APIs de soporte oficiales***
+* costo del alquiler por dia en diferentes monedas usando como referencia al USD.
 
-***API Series de Tiempo***
+* cantidad de estrellas que tiene la habitacion (maximo 5) que se calculan en base a las estrellas que usuarios anteriores le han asignado.
 
-* URL base: https://datos.gob.ar/dataset/jgm-base-series-tiempo-administracion-publica-nacional/archivo/jgm_3.13
-* Uso: Consulta de series temporales de datos públicos argentinos
-* Casos de uso en este jornada: ver el folder casos, alli tendras de detalles de sugerencias de casos para desarrollar pero puedes usar tu imaginación para crear tu propio caso de uso
-  
-***Datos Espaciales de Argentina***
+* Opiniones sobre la propiedad
 
-* URL base: https://www.idera.gob.ar/
-* Uso: Normalización y georreferenciación de datos geográficos argentinos (provincias, departamentos, municipios, localidades)
-* Catalogo de metadatos: http://catalogo.idera.gob.ar/geonetwork/
-* Casos de uso en este jornada: ver el folder casos, alli tendras de detalles de sugerencias de casos para desarrollar pero puedes usar tu imaginación para crear tu propio caso de uso
-Fuentes de datos: https://github.com/idera
+Quiero que la app maneje las reservas de dichas propiedades de manera segura, que la reserva sea en una transaccion y que si no se puede efectuar la reserva se le informe al usuario con un mensaje de error.
 
+Deben haber reservas que puedan ser reembolsables y reservas que no lo sean.
 
-***Principios de desarrollo***
+Siempre se debe poder cancelar la reserva, en caso de que no sea reembolsable, se cobrara una penalidad configurable.
 
-* Usar las specs de Kiro como punto de partida — no comenzar a codear sin leer la spec del caso
-* Usar los agentes de Kiro para implementar requerimientos funcionales descritos en la spec
-* Preferir datos configurables — los paths a CSVs y endpoints de APIs deben estar en variables de entorno o archivos de config, nunca hardcodeados
-* Normalizar geografía siempre con API Georef antes de cruzar datasets de distintas fuentes
-* Documentar en el README cómo correr el proyecto y las fuentes de datos utilizadas
+El pago de la reserva debe estar en la misma transaccion en la que se crea la reserva y en caso de que falle la creacion de la reserva o el pago, toda la transaccion debe fallar.
 
+Por ahora la propiedad va a tener los atributos arriba mencionados, pero la aplicacion debe hacerse de manera de que se puedan agregarse mas atributos para la propiedad en el futuro.
 
-***Stack recomendado***
+El backend y el frontend deben estar en aplicaciones separadas y se debe usar una arquitectura de microservicios. Backend y frontend deben ser dockerizados.
 
-* Python: Streamlit o Dash para dashboards · Folium para mapas
-* JavaScript: React + Leaflet.js para mapas interactivos · D3.js para visualizaciones
-* IA: AWS Bedrock para funcionalidades de lenguaje natural
-* Datos: pandas / polars para procesamiento de CSVs
+Hace una documentacion detallada de lo que hace el codigo.
 
+Deben crearse tests unitarios y de integracion.
 
-***Contacto y recursos***
+Debe crearse un readme con las instrucciones para ejecutar el backend y el frontend en modo debug.
 
-* Repositorio del jornada: https://github.com/Eduvilascoder/Jornada-IA-Gobierno
-* Organización: Dirección Nacional de Datos e Información Pública
-* Soporte técnico durante el evento: a traves de los facilitadores de AWS y partners de AWS.
+Deben usarese nombres significativos para las variables
 
+Deben seguirse buenas practicas en el desarrollo en esta app
+
+El lenguaje en del codigo generado debe ser ingles (nombres de variables, entidades, etc)
+
+Utiliza bases de datos relacionales y si para algunas entidades conviene usar no relacionales, podes usarlas tambien
+
+Los paramtetros de las conexiones a las bases deben estar en archivos de configuracion
