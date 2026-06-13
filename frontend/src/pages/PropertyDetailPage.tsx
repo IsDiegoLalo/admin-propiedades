@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProperty, updateProperty, deleteProperty } from '../services/propertiesService';
-import type { PropertyResponseDto, UpdatePropertyDto } from '../types';
+import { PropertyForm } from '../components/properties/PropertyForm';
+import { ErrorAlert } from '../components/common/ErrorAlert';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import type { PropertyResponseDto, CreatePropertyDto, UpdatePropertyDto } from '../types';
 
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -9,10 +12,7 @@ export default function PropertyDetailPage() {
   const [property, setProperty] = useState<PropertyResponseDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<UpdatePropertyDto>({});
-  const [servicesInput, setServicesInput] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
 
   const fetchProperty = async () => {
     if (!id) return;
@@ -31,68 +31,20 @@ export default function PropertyDetailPage() {
   }, [id]);
 
   const startEditing = () => {
-    if (!property) return;
-    setForm({
-      name: property.name,
-      type: property.type,
-      address: property.address,
-      pricePerDayUSD: property.pricePerDayUSD,
-      maxGuests: property.maxGuests,
-      cancellationPenaltyPercent: property.cancellationPenaltyPercent,
-      services: property.services,
-    });
-    setServicesInput(property.services.join(', '));
     setFormError(null);
     setEditing(true);
   };
 
-  const cancelEditing = () => {
-    setEditing(false);
-    setFormError(null);
-  };
-
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  const handleSave = async (
+    data: CreatePropertyDto | UpdatePropertyDto,
+    services: string,
   ) => {
-    const { name, value } = e.target;
-    const numericFields = ['pricePerDayUSD', 'maxGuests', 'cancellationPenaltyPercent'];
-    setForm((prev) => ({
-      ...prev,
-      [name]: numericFields.includes(name) ? Number(value) : value,
-    }));
-  };
-
-  const validateForm = (): string | null => {
-    if (form.name !== undefined && !form.name.trim()) return 'El nombre es obligatorio';
-    if (form.address !== undefined && !form.address.trim()) return 'La dirección es obligatoria';
-    if (form.pricePerDayUSD !== undefined && form.pricePerDayUSD <= 0)
-      return 'El precio debe ser mayor a 0';
-    if (form.maxGuests !== undefined && form.maxGuests < 1)
-      return 'Debe admitir al menos 1 huésped';
-    if (
-      form.cancellationPenaltyPercent !== undefined &&
-      (form.cancellationPenaltyPercent < 0 || form.cancellationPenaltyPercent > 100)
-    ) {
-      return 'La penalidad debe estar entre 0 y 100';
-    }
-    return null;
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
     if (!id) return;
-
-    const validationErr = validateForm();
-    if (validationErr) {
-      setFormError(validationErr);
-      return;
-    }
     setFormError(null);
-    setSaving(true);
     try {
       const payload: UpdatePropertyDto = {
-        ...form,
-        services: servicesInput
+        ...(data as UpdatePropertyDto),
+        services: services
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
@@ -102,14 +54,13 @@ export default function PropertyDetailPage() {
       await fetchProperty();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Error al actualizar propiedad');
-    } finally {
-      setSaving(false);
+      throw err;
     }
   };
 
   const handleDelete = async () => {
     if (!id) return;
-    if (!confirm('¿Confirmar eliminación de la propiedad?')) return;
+    if (!window.confirm('¿Confirmar eliminación de la propiedad?')) return;
     try {
       await deleteProperty(id);
       navigate('/');
@@ -122,17 +73,13 @@ export default function PropertyDetailPage() {
     return (
       <main style={{ padding: '1rem', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
         <Link to="/">← Volver</Link>
-        <div role="alert" style={{ color: 'red', marginTop: '1rem' }}>
-          {error}
-        </div>
+        <ErrorAlert message={error} />
       </main>
     );
   }
 
   if (!property) {
-    return (
-      <div style={{ padding: '1rem', fontFamily: 'sans-serif' }}>Cargando...</div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -239,114 +186,22 @@ export default function PropertyDetailPage() {
           </section>
         </>
       ) : (
-        <form
-          onSubmit={(e) => void handleSave(e)}
-          aria-label="Formulario de edición de propiedad"
-          style={{
-            border: '1px solid #ccc',
-            padding: '1rem',
-            marginTop: '1rem',
-            borderRadius: '4px',
+        <PropertyForm
+          mode="edit"
+          initialData={{
+            name: property.name,
+            type: property.type,
+            address: property.address,
+            pricePerDayUSD: property.pricePerDayUSD,
+            maxGuests: property.maxGuests,
+            cancellationPenaltyPercent: property.cancellationPenaltyPercent,
+            services: property.services,
           }}
-        >
-          <h2>Editar propiedad</h2>
-          {formError && (
-            <div role="alert" style={{ color: 'red', marginBottom: '0.5rem' }}>
-              {formError}
-            </div>
-          )}
-
-          <div style={{ marginBottom: '0.5rem' }}>
-            <label htmlFor="edit-name">Nombre *</label>
-            <br />
-            <input
-              id="edit-name"
-              name="name"
-              value={form.name ?? ''}
-              onChange={handleFormChange}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: '0.5rem' }}>
-            <label htmlFor="edit-type">Tipo *</label>
-            <br />
-            <select id="edit-type" name="type" value={form.type ?? 'apartment'} onChange={handleFormChange}>
-              <option value="apartment">Departamento</option>
-              <option value="house">Casa</option>
-            </select>
-          </div>
-          <div style={{ marginBottom: '0.5rem' }}>
-            <label htmlFor="edit-address">Dirección *</label>
-            <br />
-            <input
-              id="edit-address"
-              name="address"
-              value={form.address ?? ''}
-              onChange={handleFormChange}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: '0.5rem' }}>
-            <label htmlFor="edit-pricePerDayUSD">Precio/día (USD) *</label>
-            <br />
-            <input
-              id="edit-pricePerDayUSD"
-              name="pricePerDayUSD"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={form.pricePerDayUSD ?? 0}
-              onChange={handleFormChange}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: '0.5rem' }}>
-            <label htmlFor="edit-maxGuests">Máx. huéspedes *</label>
-            <br />
-            <input
-              id="edit-maxGuests"
-              name="maxGuests"
-              type="number"
-              min="1"
-              value={form.maxGuests ?? 1}
-              onChange={handleFormChange}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: '0.5rem' }}>
-            <label htmlFor="edit-cancellationPenaltyPercent">Penalidad cancelación (%)</label>
-            <br />
-            <input
-              id="edit-cancellationPenaltyPercent"
-              name="cancellationPenaltyPercent"
-              type="number"
-              min="0"
-              max="100"
-              value={form.cancellationPenaltyPercent ?? 0}
-              onChange={handleFormChange}
-            />
-          </div>
-          <div style={{ marginBottom: '0.5rem' }}>
-            <label htmlFor="edit-services">Servicios (separados por coma)</label>
-            <br />
-            <input
-              id="edit-services"
-              name="services"
-              value={servicesInput}
-              onChange={(e) => setServicesInput(e.target.value)}
-              placeholder="WiFi, Piscina, Estacionamiento"
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="submit" disabled={saving}>
-              {saving ? 'Guardando...' : 'Guardar cambios'}
-            </button>
-            <button type="button" onClick={cancelEditing}>
-              Cancelar
-            </button>
-          </div>
-        </form>
+          initialServices={property.services.join(', ')}
+          onSubmit={handleSave}
+          onCancel={() => setEditing(false)}
+          error={formError}
+        />
       )}
     </main>
   );
