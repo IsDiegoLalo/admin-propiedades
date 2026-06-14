@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import { PORT } from './config/env';
 import { connectMongo, db, checkConnections } from './db';
@@ -14,6 +15,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
+
+// Servir archivos estáticos de uploads
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Rutas
 app.use('/properties', propertiesRouter);

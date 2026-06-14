@@ -13,7 +13,9 @@ import Rating from '@mui/material/Rating';
 import SearchIcon from '@mui/icons-material/Search';
 import PeopleIcon from '@mui/icons-material/People';
 import { useProperties } from '../hooks/useProperties';
+import { propertiesApi } from '../config/api';
 import { ErrorAlert } from '../components/common/ErrorAlert';
+import placeholderImg from '../assets/images/property_placeholder.png';
 
 const HERO_IMAGE_URL =
   'https://urubus.com.uy/blog/wp-content/uploads/2024/08/aerial-view-of-piriapolis-uruguay-and-harbor-from-cerro-san-antonio--1536x1024.jpg';
@@ -109,8 +111,8 @@ export default function HomePage() {
                     height="180"
                     image={
                       property.photos.length > 0
-                        ? property.photos[0].url
-                        : HERO_IMAGE_URL
+                        ? `${propertiesApi.defaults.baseURL ?? ''}${property.photos[0].url}`
+                        : placeholderImg
                     }
                     alt={`Foto de ${property.name}`}
                     sx={{ objectFit: 'cover' }}

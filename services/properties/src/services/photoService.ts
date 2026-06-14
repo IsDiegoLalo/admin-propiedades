@@ -23,9 +23,12 @@ export async function addPhoto(
     throw new PhotoTooLargeError(file.size);
   }
 
+  // Extraer solo el nombre del archivo para construir una URL relativa accesible
+  const basename = file.path.split('/').pop() ?? file.originalname;
+
   const photoRef: PhotoReference = {
     photoId: uuidv4(),
-    url: file.path,
+    url: `/uploads/${basename}`,
     filename: file.originalname,
     sizeBytes: file.size,
     mimeType: file.mimetype,
